@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<campus_updates>
+  <announcement>
+    <id>101</id>
+    <category>URGENT</category>
+    <title>Enrollment for Second Semester</title>
+    <date>2026-03-20</date>
+    <description>Please settle all accounts at the registrar by Friday to secure your slots.</description>
+  </announcement>
+  <announcement>
+    <id>1773581088</id>
+    <category>HOLIDAY</category>
+    <title>Class suspension</title>
+    <date>2026-03-15</date>
+    <description>Classes are suspended due to bad weather</description>
+  </announcement>
+</campus_updates>

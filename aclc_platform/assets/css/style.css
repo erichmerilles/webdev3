@@ -1,0 +1,130 @@
+/* =========================================
+   1. GLOBAL STYLES
+========================================= */
+body {
+    background-color: #f4f7f6;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-y: scroll;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s ease;
+}
+
+/* =========================================
+   2. NAVBAR STYLES
+========================================= */
+.navbar-custom,
+.navbar-aclc {
+    background-color: #003580;
+}
+
+/* =========================================
+   3. STUDENT FEED (index.php) - Bulletin Board
+========================================= */
+.announcement-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.card-header-custom {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1rem 1.25rem;
+}
+
+.event-date-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 70px;
+}
+
+.action-btn {
+    color: #495057;
+    font-weight: 500;
+    transition: all 0.2s;
+    background-color: transparent;
+    border: 1px solid transparent;
+}
+
+.action-btn:hover {
+    color: #003580;
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+}
+
+.comment-section {
+    background-color: #fafbfc;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* XML Urgent Alerts */
+.urgent-alert-box {
+    border-left: 4px solid #dc3545;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.xml-bulletin {
+    border-left: 4px solid #dc3545;
+}
+
+/* =========================================
+   4. ADMIN DASHBOARD (admin.php)
+========================================= */
+.kpi-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.5rem;
+}
+
+.table-custom th {
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+/* =========================================
+   5. LOGIN PAGE (login.php)
+========================================= */
+.login-page {
+    background-color: #f4f7f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 15px;
+    border: none;
+}
+
+.brand-header {
+    background-color: #003580;
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 20px;
+    text-align: center;
+}
