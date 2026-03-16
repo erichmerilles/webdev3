@@ -70,3 +70,163 @@ function submitComment(postId) {
             }
         });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // 1. Toggle Event Date input based on Category Selection (Admin only)
+    const postTypeSelect = document.getElementById('postTypeSelect');
+    if (postTypeSelect) {
+        postTypeSelect.addEventListener('change', function () {
+            var eventDateContainer = document.getElementById('eventDateContainer');
+            if (this.value === 'event') {
+                eventDateContainer.style.display = 'block';
+            } else {
+                eventDateContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // 2. Toggle Event Date inside the Edit Post Modal (Admin only)
+    const editPostType = document.getElementById('editPostType');
+    if (editPostType) {
+        editPostType.addEventListener('change', function () {
+            var editEventDateContainer = document.getElementById('editEventDateContainer');
+            if (this.value === 'event') {
+                editEventDateContainer.style.display = 'block';
+            } else {
+                editEventDateContainer.style.display = 'none';
+            }
+        });
+    }
+
+    // 3. Initialize Bootstrap Tooltips (Global)
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // 4. Populate Edit Post Modal dynamically (Admin only)
+    const editPostModal = document.getElementById('editPostModal');
+    if (editPostModal) {
+        editPostModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            document.getElementById('editPostId').value = button.getAttribute('data-id');
+            document.getElementById('editPostTitle').value = button.getAttribute('data-title');
+            document.getElementById('editPostContent').value = button.getAttribute('data-content');
+
+            const type = button.getAttribute('data-type');
+            document.getElementById('editPostType').value = type;
+
+            const editEventDateContainer = document.getElementById('editEventDateContainer');
+            if (type === 'event') {
+                editEventDateContainer.style.display = 'block';
+                document.getElementById('editEventDate').value = button.getAttribute('data-event-date');
+            } else {
+                editEventDateContainer.style.display = 'none';
+                document.getElementById('editEventDate').value = '';
+            }
+        });
+    }
+
+    // 5. Populate Edit Bulletin Modal dynamically (Admin only)
+    const editBulletinModal = document.getElementById('editBulletinModal');
+    if (editBulletinModal) {
+        editBulletinModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            document.getElementById('editXmlId').value = button.getAttribute('data-id');
+            document.getElementById('editXmlCategory').value = button.getAttribute('data-category');
+            document.getElementById('editXmlTitle').value = button.getAttribute('data-title');
+            document.getElementById('editXmlDescription').value = button.getAttribute('data-description');
+        });
+    }
+
+    // 6. Initialize DataTables for Pagination (Admin only)
+    if (window.jQuery && $.fn.DataTable) {
+        if ($('#publicationsTable').length) {
+            $('#publicationsTable').DataTable({
+                "pageLength": 5,
+                "lengthChange": false,
+                "ordering": false,
+                "info": true,
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Search records..."
+                }
+            });
+        }
+
+        if ($('#bulletinsTable').length) {
+            $('#bulletinsTable').DataTable({
+                "pageLength": 3,
+                "lengthChange": false,
+                "ordering": false,
+                "info": true,
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Search alerts..."
+                }
+            });
+        }
+    }
+});
+
+// 7. SweetAlert2 Logout Confirmation (Global)
+function confirmLogout(event) {
+    event.preventDefault();
+    Swal.fire({
+        title: 'Sign out?',
+        text: "You are about to securely end your session.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0f172a',
+        cancelButtonColor: '#dc3545',
+        confirmButtonText: 'Yes, log me out',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        customClass: { popup: 'rounded-4' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Logging out...',
+                icon: 'success',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1000
+            }).then(() => {
+                window.location.href = 'logout.php';
+            });
+        }
+    })
+}
+
+// 8. SweetAlert2 Universal Delete Confirmation (Admin only)
+function confirmDelete(deleteUrl, itemType) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This " + itemType + " will be permanently deleted. This action cannot be undone.",
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, delete it!',
+        reverseButtons: true,
+        customClass: { popup: 'rounded-4' }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = deleteUrl;
+        }
+    })
+}
+
+// 9. Smart Scroll Memory: Remember exact scroll position during page reloads (Global)
+window.addEventListener('beforeunload', function () {
+    sessionStorage.setItem('scrollPosition', window.scrollY);
+});
+
+window.addEventListener('load', function () {
+    if (sessionStorage.getItem('scrollPosition') !== null) {
+        window.scrollTo(0, parseInt(sessionStorage.getItem('scrollPosition')));
+        sessionStorage.removeItem('scrollPosition');
+    }
+});

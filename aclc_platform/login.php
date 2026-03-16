@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="card shadow-lg login-card">
         <div class="brand-header">
             <h3 class="mb-0 fw-bold"><i class="bi bi-building me-2"></i>ACLC PLATFORM</h3>
-            <small>Campus Portal</small>
+            <small>School Portal</small>
         </div>
         <div class="card-body p-4">
 
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="text-center mt-4">
                 <span class="text-muted small">
-                    <i class="bi bi-shield-lock me-1"></i>Secure Campus Authentication
+                    <i class="bi bi-shield-lock me-1"></i>Secure School Authentication
                 </span>
             </div>
         </div>

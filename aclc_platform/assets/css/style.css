@@ -1,111 +1,218 @@
 /* =========================================
-   1. GLOBAL STYLES
+   1. ROOT VARIABLES (Modern University Theme)
 ========================================= */
+
+:root {
+    --aclc-navy: #1e3a8a;
+    --aclc-cyan: #3b82f6;
+    --elegant-bg: #f1f5f9;
+    --text-dark: #1e293b;
+    --text-muted: #64748b;
+}
+
+/* =========================================
+   2. GLOBAL STYLES
+========================================= */
+
 body {
-    background-color: #f4f7f6;
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--elegant-bg);
+    color: var(--text-dark);
     overflow-y: scroll;
 }
 
+/* =========================================
+   3. CARD STYLES
+========================================= */
+
 .card {
-    border-radius: 12px;
+    border-radius: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+.card-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 1rem 1rem 0 0 !important;
 }
 
 .card-hover:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.07) !important;
     transition: all 0.3s ease;
 }
 
-/* =========================================
-   2. NAVBAR STYLES
-========================================= */
-.navbar-custom,
-.navbar-aclc {
-    background-color: #003580;
+/* Elegant Cards */
+
+.elegant-card {
+    background: #ffffff;
+    border-radius: 20px !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.35s ease;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+}
+
+.elegant-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* =========================================
-   3. STUDENT FEED (index.php) - Bulletin Board
+   4. NAVBAR
 ========================================= */
+
+.navbar-elegant {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1rem 0;
+}
+
+.brand-text {
+    font-family: 'Playfair Display', serif;
+    color: var(--aclc-navy);
+    letter-spacing: -0.5px;
+}
+
+/* =========================================
+   5. HERO SECTION
+========================================= */
+
+.hero-elegant {
+    padding: 5rem 0 3rem 0;
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent);
+}
+
+/* =========================================
+   6. STUDENT FEED / ANNOUNCEMENTS
+========================================= */
+
 .announcement-card {
     border: none;
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     margin-bottom: 1.5rem;
     overflow: hidden;
 }
 
-.card-header-custom {
-    background-color: #ffffff;
-    border-bottom: 1px solid #f0f0f0;
-    padding: 1rem 1.25rem;
+.card-meta {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: var(--aclc-cyan);
 }
 
-.event-date-box {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 8px 12px;
+/* Event Date */
+
+.date-badge-elegant {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 12px;
     text-align: center;
-    min-width: 70px;
-}
-
-.action-btn {
-    color: #495057;
-    font-weight: 500;
-    transition: all 0.2s;
-    background-color: transparent;
-    border: 1px solid transparent;
-}
-
-.action-btn:hover {
-    color: #003580;
-    background-color: #f8f9fa;
-    border-color: #e9ecef;
-}
-
-.comment-section {
-    background-color: #fafbfc;
-    border-top: 1px solid #f0f0f0;
-}
-
-/* XML Urgent Alerts */
-.urgent-alert-box {
-    border-left: 4px solid #dc3545;
-    border-radius: 8px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-}
-
-.xml-bulletin {
-    border-left: 4px solid #dc3545;
+    min-width: 80px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 /* =========================================
-   4. ADMIN DASHBOARD (admin.php)
+   7. BUTTONS
 ========================================= */
-.kpi-icon {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    font-size: 1.5rem;
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--aclc-navy), #2563eb);
+    border: none;
 }
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+}
+
+.btn-elegant {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    color: var(--text-muted);
+    border-radius: 12px;
+    padding: 0.7rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.btn-elegant:hover {
+    background: var(--aclc-navy);
+    color: white !important;
+    border-color: var(--aclc-navy);
+}
+
+/* =========================================
+   8. COMMENTS
+========================================= */
+
+.comment-section {
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* =========================================
+   9. ALERTS / BULLETINS
+========================================= */
+
+.urgent-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.alert-dot {
+    height: 8px;
+    width: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+/* =========================================
+   10. SIDEBAR
+========================================= */
+
+.sidebar-sticky {
+    top: 100px;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* =========================================
+   11. TABLES
+========================================= */
 
 .table-custom th {
     font-weight: 600;
-    color: #6c757d;
+    color: var(--aclc-navy);
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid var(--aclc-cyan) !important;
+}
+
+.table-custom td {
+    color: #334155;
+    vertical-align: middle;
 }
 
 /* =========================================
-   5. LOGIN PAGE (login.php)
+   12. LOGIN PAGE
 ========================================= */
+
 .login-page {
     background-color: #f4f7f6;
     display: flex;
@@ -119,12 +226,53 @@ body {
     max-width: 400px;
     border-radius: 15px;
     border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
 }
 
 .brand-header {
-    background-color: #003580;
+    background-color: var(--aclc-navy);
     color: white;
     border-radius: 15px 15px 0 0;
     padding: 20px;
     text-align: center;
+}
+
+/* =========================================
+   13. FORMS
+========================================= */
+
+.form-control:focus,
+.form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+    border-color: var(--aclc-cyan);
+    background-color: #fff !important;
+}
+
+/* =========================================
+   14. DATATABLES
+========================================= */
+
+div.dataTables_wrapper div.dataTables_filter input {
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    padding: 0.3rem 0.75rem;
+}
+
+div.dataTables_wrapper div.dataTables_filter input:focus {
+    border-color: var(--aclc-cyan);
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+}
+
+.page-item.active .page-link {
+    background-color: var(--aclc-navy);
+    border-color: var(--aclc-navy);
+}
+
+/* =========================================
+   15. LINKS
+========================================= */
+
+.hover-navy:hover {
+    color: var(--aclc-navy) !important;
+    transition: 0.2s;
 }
