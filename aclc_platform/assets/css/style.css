@@ -276,3 +276,55 @@ div.dataTables_wrapper div.dataTables_filter input:focus {
     color: var(--aclc-navy) !important;
     transition: 0.2s;
 }
+
+/* =========================================
+   16. FEED FILTERS (Pill Sorter)
+========================================= */
+
+.feed-filters {
+    /* Hide scrollbar on mobile if it overflows */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.feed-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.filter-pill {
+    background-color: var(--white);
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    border-radius: 50px;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.filter-pill:hover {
+    border-color: var(--aclc-cyan);
+    color: var(--aclc-navy);
+    background-color: #f8fafc;
+}
+
+.filter-pill.active {
+    background-color: var(--aclc-navy);
+    color: var(--white);
+    border-color: var(--aclc-navy);
+    box-shadow: 0 4px 12px rgba(46, 110, 220, 0.189);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -192,7 +192,7 @@ function confirmLogout(event) {
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,
-                timer: 1000
+                timer: 1500
             }).then(() => {
                 window.location.href = 'logout.php';
             });
@@ -229,4 +229,42 @@ window.addEventListener('load', function () {
         window.scrollTo(0, parseInt(sessionStorage.getItem('scrollPosition')));
         sessionStorage.removeItem('scrollPosition');
     }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const filterBtns = document.querySelectorAll('.filter-pill');
+    const postCards = document.querySelectorAll('.post-card');
+    const noResultsMsg = document.getElementById('noResultsMsg');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function () {
+            // 1. Remove active class from all buttons, add to clicked button
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const filterValue = this.getAttribute('data-filter');
+            let visibleCount = 0;
+
+            // 2. Loop through posts and hide/show based on category
+            postCards.forEach(card => {
+                const category = card.getAttribute('data-category');
+
+                if (filterValue === 'all' || filterValue === category) {
+                    card.style.display = 'block';
+                    // Optional: Add a quick fade-in animation
+                    card.style.animation = 'fadeIn 0.4s ease forwards';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // 3. Show "No Results" message if empty
+            if (visibleCount === 0) {
+                noResultsMsg.classList.remove('d-none');
+            } else {
+                noResultsMsg.classList.add('d-none');
+            }
+        });
+    });
 });

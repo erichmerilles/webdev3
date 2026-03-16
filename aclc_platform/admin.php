@@ -205,6 +205,7 @@ $allPosts = $allPostsStmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/*" href="assets/img/logo2.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACLC Admin Dashboard</title>
@@ -225,19 +226,19 @@ $allPosts = $allPostsStmt->fetchAll(PDO::FETCH_ASSOC);
 
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top shadow-sm py-3">
+    <nav class="navbar navbar-expand-lg navbar-elegant sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="admin.php">
                 <div class="bg-primary text-white rounded p-2 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                     <i class="bi bi-grid-1x2-fill fs-6"></i>
                 </div>
                 ACLC Admin Workspace
             </a>
             <div class="d-flex align-items-center">
-                <span class="text-light me-4 small fw-medium">
+                <span class="text-dark me-4 small fw-medium">
                     <i class="bi bi-person-circle me-1 opacity-75"></i> <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?>
                 </span>
-                <a href="index.php" class="btn btn-sm btn-outline-light me-2 rounded-pill px-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Return to Student Feed">
+                <a href="index.php" class="btn btn-sm btn-outline-dark me-2 rounded-pill px-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Return to Student Feed">
                     <i class="bi bi-box-arrow-up-right me-1"></i>View Feed
                 </a>
                 <button onclick="confirmLogout(event)" class="btn btn-sm btn-danger rounded-pill px-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Sign out of Admin Panel">

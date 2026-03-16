@@ -16,13 +16,13 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="en">
 
 <head>
+    <link rel="icon" type="image/*" href="assets/img/logo2.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACLC Portal | Elegant Student Hub</title>
+    <title>ACLC Portal | Student Hub</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -48,9 +48,11 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </nav>
 
     <div class="hero-elegant text-center">
-        <div class="container">
-            <h1 class="display-5 fw-bold mb-2">Campus Updates</h1>
-            <p class="text-muted lead">The official news and announcements of ACLC College of Manila.</p>
+        <div class="hero-bg-container">
+            <div class="container py-5">
+                <h1 class="display-5 fw-bold mb-2">Campus Updates</h1>
+                <p class="text-muted lead">The official news and announcements of ACLC College of Manila.</p>
+            </div>
         </div>
     </div>
 
@@ -58,70 +60,85 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="row g-5">
 
             <div class="col-lg-8">
+
+                <div class="d-flex align-items-center gap-2 mb-4 overflow-auto pb-2 feed-filters">
+                    <button class="filter-pill active" data-filter="all">All Updates</button>
+                    <button class="filter-pill" data-filter="news"><i class="bi bi-megaphone me-1"></i> News</button>
+                    <button class="filter-pill" data-filter="event"><i class="bi bi-calendar-event me-1"></i> Events</button>
+                </div>
+
                 <?php if (empty($posts)): ?>
                     <div class="text-center py-5">
                         <p class="text-muted italic">Everything is quiet on campus for now.</p>
                     </div>
                 <?php endif; ?>
 
-                <?php foreach ($posts as $post): ?>
-                    <div class="card elegant-card">
-                        <div class="p-4 d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="card-meta mb-1"><?= $post['type'] ?></div>
-                                <h2 class="h4 fw-bold mb-0"><?= htmlspecialchars($post['title']) ?></h2>
+                <div id="feedContainer">
+                    <?php foreach ($posts as $post): ?>
+                        <div class="card elegant-card post-card" data-category="<?= $post['type'] ?>">
+                            <div class="p-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="card-meta mb-1"><?= $post['type'] ?></div>
+                                    <h2 class="h4 fw-bold mb-0"><?= htmlspecialchars($post['title']) ?></h2>
+                                </div>
+                                <?php if ($post['type'] == 'event'): ?>
+                                    <?php $displayDate = !empty($post['event_date']) ? $post['event_date'] : $post['created_at']; ?>
+                                    <div class="date-badge-elegant">
+                                        <div class="small fw-bold text-uppercase text-muted"><?= date('M', strtotime($displayDate)) ?></div>
+                                        <div class="h3 fw-bold mb-0 text-dark"><?= date('d', strtotime($displayDate)) ?></div>
+                                    </div>
+                                <?php endif; ?>
                             </div>
-                            <?php if ($post['type'] == 'event'): ?>
-                                <?php $displayDate = !empty($post['event_date']) ? $post['event_date'] : $post['created_at']; ?>
-                                <div class="date-badge-elegant">
-                                    <div class="small fw-bold text-uppercase text-muted"><?= date('M', strtotime($displayDate)) ?></div>
-                                    <div class="h3 fw-bold mb-0 text-dark"><?= date('d', strtotime($displayDate)) ?></div>
+
+                            <?php if (!empty($post['image_path'])): ?>
+                                <div class="px-4">
+                                    <img src="<?= htmlspecialchars($post['image_path']) ?>" class="img-fluid rounded-4 w-100" alt="News Image" style="max-height: 450px; object-fit: cover;">
                                 </div>
                             <?php endif; ?>
-                        </div>
 
-                        <?php if (!empty($post['image_path'])): ?>
-                            <div class="px-4">
-                                <img src="<?= htmlspecialchars($post['image_path']) ?>" class="img-fluid rounded-4 w-100" alt="News Image" style="max-height: 450px; object-fit: cover;">
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="card-body p-4">
-                            <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem;">
-                                <?= nl2br(htmlspecialchars($post['content'])) ?>
-                            </p>
-                            <hr class="opacity-0">
-                            <div class="d-flex gap-3 mt-2">
-                                <button class="btn btn-elegant flex-grow-1" onclick="likePost(<?= $post['id'] ?>, this)">
-                                    <i class="bi bi-heart me-2"></i> <span id="likeCount_<?= $post['id'] ?>"><?= $post['likes'] ?></span>
-                                </button>
-                                <button class="btn btn-elegant flex-grow-1" data-bs-toggle="collapse" data-bs-target="#comments_<?= $post['id'] ?>">
-                                    <i class="bi bi-chat-right-text me-2"></i> Comments
-                            </div>
-                        </div>
-
-                        <div class="collapse" id="comments_<?= $post['id'] ?>">
-                            <div class="p-4 bg-light border-top border-light">
-                                <div id="commentList_<?= $post['id'] ?>" class="mb-4">
-                                    <?php
-                                    $c_stmt = $pdo->prepare("SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC");
-                                    $c_stmt->execute([$post['id']]);
-                                    while ($comment = $c_stmt->fetch(PDO::FETCH_ASSOC)) {
-                                        echo "<div class='mb-3'>";
-                                        echo "<span class='fw-bold small text-dark'>" . htmlspecialchars($comment['student_name']) . "</span>";
-                                        echo "<p class='small text-muted mb-0'>" . htmlspecialchars($comment['comment_text']) . "</p>";
-                                        echo "</div>";
-                                    }
-                                    ?>
+                            <div class="card-body p-4">
+                                <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem;">
+                                    <?= nl2br(htmlspecialchars($post['content'])) ?>
+                                </p>
+                                <hr class="opacity-0">
+                                <div class="d-flex gap-3 mt-2">
+                                    <button class="btn btn-elegant flex-grow-1" onclick="likePost(<?= $post['id'] ?>, this)">
+                                        <i class="bi bi-heart me-2"></i> <span id="likeCount_<?= $post['id'] ?>"><?= $post['likes'] ?></span>
+                                    </button>
+                                    <button class="btn btn-elegant flex-grow-1" data-bs-toggle="collapse" data-bs-target="#comments_<?= $post['id'] ?>">
+                                        <i class="bi bi-chat-right-text me-2"></i> Comments
+                                    </button>
                                 </div>
-                                <div class="input-group rounded-pill overflow-hidden border shadow-sm">
-                                    <input type="text" id="commentInput_<?= $post['id'] ?>" class="form-control border-0 ps-4" placeholder="Write a comment...">
-                                    <button class="btn btn-primary px-4" onclick="submitComment(<?= $post['id'] ?>)">Post</button>
+                            </div>
+
+                            <div class="collapse" id="comments_<?= $post['id'] ?>">
+                                <div class="p-4 bg-light border-top border-light">
+                                    <div id="commentList_<?= $post['id'] ?>" class="mb-4">
+                                        <?php
+                                        $c_stmt = $pdo->prepare("SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC");
+                                        $c_stmt->execute([$post['id']]);
+                                        while ($comment = $c_stmt->fetch(PDO::FETCH_ASSOC)) {
+                                            echo "<div class='mb-3'>";
+                                            echo "<span class='fw-bold small text-dark'>" . htmlspecialchars($comment['student_name']) . "</span>";
+                                            echo "<p class='small text-muted mb-0'>" . htmlspecialchars($comment['comment_text']) . "</p>";
+                                            echo "</div>";
+                                        }
+                                        ?>
+                                    </div>
+                                    <div class="input-group rounded-pill overflow-hidden border shadow-sm">
+                                        <input type="text" id="commentInput_<?= $post['id'] ?>" class="form-control border-0 ps-4" placeholder="Write a comment...">
+                                        <button class="btn btn-primary px-4" onclick="submitComment(<?= $post['id'] ?>)">Post</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </div>
+
+                <div id="noResultsMsg" class="text-center py-5 d-none">
+                    <p class="text-muted italic">No updates found for this category.</p>
+                </div>
+
             </div>
 
             <div class="col-lg-4">
@@ -146,8 +163,8 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <div class="mt-5">
                         <h6 class="fw-bold text-uppercase small letter-spacing-1 mb-3">Quick Links</h6>
                         <ul class="list-unstyled">
-                            <li class="mb-2"><a href="#" class="text-decoration-none text-muted small hover-navy">Main ACLC Website</a></li>
-                            <li class="mb-2"><a href="#" class="text-decoration-none text-muted small hover-navy">Student Portal Login</a></li>
+                            <li class="mb-2"><a href="http://www.aclc.edu.ph/" class="text-decoration-none text-muted small hover-navy">Main ACLC Website</a></li>
+                            <li class="mb-2"><a href="http://www.amaesonline.com/index_pscs.php" class="text-decoration-none text-muted small hover-navy">Student Portal Login</a></li>
                         </ul>
                     </div>
                 </div>
@@ -158,6 +175,7 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/main.js"></script>
+
 </body>
 
 </html>

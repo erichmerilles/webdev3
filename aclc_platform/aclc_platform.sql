@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 15, 2026 at 01:50 PM
+-- Generation Time: Mar 16, 2026 at 03:44 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,9 +41,7 @@ CREATE TABLE `comments` (
 --
 
 INSERT INTO `comments` (`id`, `post_id`, `student_name`, `comment_text`, `status`, `created_at`) VALUES
-(3, 5, 'admin', 'Ang panget ng school niyo!', 'approved', '2026-03-15 12:46:23'),
-(4, 4, 'admin', 'HAHA ka din', 'approved', '2026-03-15 12:46:40'),
-(5, 5, 'student01', 'true', 'approved', '2026-03-15 12:48:07');
+(6, 17, 'student01', 'nice', 'approved', '2026-03-16 05:46:45');
 
 -- --------------------------------------------------------
 
@@ -58,16 +56,17 @@ CREATE TABLE `posts` (
   `type` enum('news','event') DEFAULT 'news',
   `image_path` varchar(255) DEFAULT NULL,
   `likes` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `event_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `posts`
 --
 
-INSERT INTO `posts` (`id`, `title`, `content`, `type`, `image_path`, `likes`, `created_at`) VALUES
-(4, 'HAHAHAHA', 'HAHAHAHA', 'news', 'assets/img/uploads/1773569595_1156488.png', 1, '2026-03-15 10:13:15'),
-(5, 'Panget', 'ACLC alma mater', 'news', 'assets/img/uploads/1773578752_aclclogin.png', 2, '2026-03-15 12:45:52');
+INSERT INTO `posts` (`id`, `title`, `content`, `type`, `image_path`, `likes`, `created_at`, `event_date`) VALUES
+(16, 'asd', 'asd', 'news', NULL, 1, '2026-03-16 04:20:46', NULL),
+(17, 'Web Development Contest', 'Creating a website contest', 'event', 'assets/img/uploads/1773634940_1156488.png', 3, '2026-03-16 04:22:20', '2026-03-17');
 
 -- --------------------------------------------------------
 
@@ -123,13 +122,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `users`
