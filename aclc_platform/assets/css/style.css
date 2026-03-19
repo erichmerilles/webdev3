@@ -328,3 +328,52 @@ div.dataTables_wrapper div.dataTables_filter input:focus {
         transform: translateY(0);
     }
 }
+
+/* =========================================
+   17. NEWS TICKER (Urgent Bulletins)
+========================================= */
+.ticker-container {
+    background-color: #dc3545;
+    color: white;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ticker-label {
+    background-color: #212529;
+    padding: 0.6rem 1.5rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    z-index: 10;
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+}
+
+.ticker-wrapper {
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.ticker-content {
+    display: inline-block;
+    animation: ticker-scroll 45s linear infinite;
+    padding-left: 100%;
+}
+
+.ticker-container:hover .ticker-content {
+    animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}

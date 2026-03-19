@@ -9,8 +9,24 @@ if (!isset($_SESSION['logged_in'])) {
 
 require_once 'config/db.php';
 
+// Fetch all posts
 $stmt = $pdo->query("SELECT * FROM posts WHERE created_at <= NOW() ORDER BY created_at DESC");
 $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ==========================================
+// PERSISTENT LIKE TRACKING 
+// ==========================================
+$userId = $_SESSION['user_id'];
+
+// 1. Get all Post IDs this user has liked
+$likedPostsStmt = $pdo->prepare("SELECT post_id FROM post_likes WHERE user_id = ?");
+$likedPostsStmt->execute([$userId]);
+$userLikedPosts = $likedPostsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+// 2. Get all Comment IDs this user has liked
+$likedCommentsStmt = $pdo->prepare("SELECT comment_id FROM comment_likes WHERE user_id = ?");
+$likedCommentsStmt->execute([$userId]);
+$userLikedComments = $likedCommentsStmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,16 +63,44 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </nav>
 
-    <div class="hero-elegant text-center">
-        <div class="hero-bg-container">
-            <div class="container py-5">
+    <div class="hero-elegant text-center pb-0">
+        <div class="hero-bg-container mb-0" style="border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+            <div class="container pt-5 pb-4">
                 <h1 class="display-5 fw-bold mb-2">Campus Updates</h1>
-                <p class="text-muted lead">The official news and announcements of ACLC College of Manila.</p>
+                <p class="text-muted lead mb-0">The official news and announcements of ACLC College of Manila.</p>
             </div>
         </div>
     </div>
 
-    <div class="container py-4">
+    <div class="container-fluid px-0 mb-4">
+        <div class="ticker-container mx-auto" style="max-width: 96%; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;">
+            <div class="ticker-label text-uppercase">
+                <span class="alert-dot bg-danger me-2"></span> ACLC News
+            </div>
+            <div class="ticker-wrapper">
+                <div class="ticker-content">
+                    <?php
+                    $bulletins = [];
+                    if (file_exists('data/announcements.xml')) {
+                        $xml = simplexml_load_file('data/announcements.xml');
+                        foreach ($xml->announcement as $item) {
+                            $bulletins[] = "<span class='badge bg-white text-danger me-2 text-uppercase'>" . htmlspecialchars($item->category) . "</span> <span class='fw-bold me-1'>" . htmlspecialchars($item->title) . ":</span> <span class='me-5 opacity-75'>" . htmlspecialchars($item->description) . "</span>";
+                        }
+                    }
+
+                    if (empty($bulletins)) {
+                        echo "<span class='fst-italic opacity-75'>No active urgent bulletins at this time.</span>";
+                    } else {
+                        $bulletinString = implode("", $bulletins);
+                        echo $bulletinString . $bulletinString;
+                    }
+                    ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-3">
         <div class="row g-5">
 
             <div class="col-lg-8">
@@ -69,7 +113,7 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <?php if (empty($posts)): ?>
                     <div class="text-center py-5">
-                        <p class="text-muted italic">Everything is quiet on campus for now.</p>
+                        <p class="text-muted italic">No current post to display.</p>
                     </div>
                 <?php endif; ?>
 
@@ -101,10 +145,17 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?= nl2br(htmlspecialchars($post['content'])) ?>
                                 </p>
                                 <hr class="opacity-0">
+
                                 <div class="d-flex gap-3 mt-2">
-                                    <button class="btn btn-elegant flex-grow-1" onclick="likePost(<?= $post['id'] ?>, this)">
-                                        <i class="bi bi-heart me-2"></i> <span id="likeCount_<?= $post['id'] ?>"><?= $post['likes'] ?></span>
+                                    <?php
+                                    $isPostLiked = in_array($post['id'], $userLikedPosts);
+                                    $btnClass = $isPostLiked ? 'btn-primary text-white bg-primary' : 'btn-elegant';
+                                    $iconClass = $isPostLiked ? 'bi-heart-fill' : 'bi-heart';
+                                    ?>
+                                    <button class="btn <?= $btnClass ?> flex-grow-1" onclick="likePost(<?= $post['id'] ?>, this)">
+                                        <i class="bi <?= $iconClass ?> me-2"></i> <span id="likeCount_<?= $post['id'] ?>"><?= $post['likes'] ?></span>
                                     </button>
+
                                     <button class="btn btn-elegant flex-grow-1" data-bs-toggle="collapse" data-bs-target="#comments_<?= $post['id'] ?>">
                                         <i class="bi bi-chat-right-text me-2"></i> Comments
                                     </button>
@@ -117,11 +168,62 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                         <?php
                                         $c_stmt = $pdo->prepare("SELECT * FROM comments WHERE post_id = ? ORDER BY created_at ASC");
                                         $c_stmt->execute([$post['id']]);
-                                        while ($comment = $c_stmt->fetch(PDO::FETCH_ASSOC)) {
-                                            echo "<div class='mb-3'>";
-                                            echo "<span class='fw-bold small text-dark'>" . htmlspecialchars($comment['student_name']) . "</span>";
-                                            echo "<p class='small text-muted mb-0'>" . htmlspecialchars($comment['comment_text']) . "</p>";
-                                            echo "</div>";
+                                        $all_comments = $c_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                                        $comments_by_parent = [];
+                                        foreach ($all_comments as $c) {
+                                            $parentId = $c['parent_id'] ?? 0;
+                                            $comments_by_parent[$parentId][] = $c;
+                                        }
+
+                                        if (!empty($comments_by_parent[0])) {
+                                            foreach ($comments_by_parent[0] as $comment) {
+                                                $likes = $comment['likes'] ?? 0;
+
+                                                // DYNAMIC COMMENT LIKES
+                                                $isCommentLiked = in_array($comment['id'], $userLikedComments);
+                                                $cTextClass = $isCommentLiked ? 'text-primary' : 'text-muted';
+                                                $cIconClass = $isCommentLiked ? 'bi-hand-thumbs-up-fill' : 'bi-hand-thumbs-up';
+
+                                                echo "<div class='mb-3'>";
+                                                echo "  <span class='fw-bold small text-dark'>" . htmlspecialchars($comment['student_name']) . "</span>";
+                                                echo "  <p class='small text-muted mb-1'>" . htmlspecialchars($comment['comment_text']) . "</p>";
+
+                                                echo "  <div class='d-flex gap-3 align-items-center mb-2'>";
+                                                echo "      <button class='btn btn-link p-0 {$cTextClass} small text-decoration-none' style='font-size: 0.8rem;' onclick='likeComment({$comment['id']}, this)'><i class='bi {$cIconClass}'></i> <span id='commentLike_{$comment['id']}'>{$likes}</span></button>";
+                                                echo "      <button class='btn btn-link p-0 text-muted small text-decoration-none' style='font-size: 0.8rem;' onclick='toggleReplyBox({$comment['id']})'>Reply</button>";
+                                                echo "  </div>";
+
+                                                echo "  <div id='replyBox_{$comment['id']}' class='d-none mb-3'>";
+                                                echo "      <div class='input-group rounded-pill overflow-hidden border shadow-sm input-group-sm'>";
+                                                echo "          <input type='text' id='replyInput_{$comment['id']}' class='form-control border-0 ps-3' placeholder='Write a reply...'>";
+                                                echo "          <button class='btn btn-primary px-3' onclick='submitReply({$post['id']}, {$comment['id']})'>Post</button>";
+                                                echo "      </div>";
+                                                echo "  </div>";
+
+                                                if (!empty($comments_by_parent[$comment['id']])) {
+                                                    echo "<div class='ms-4 ps-3 border-start border-2 border-primary border-opacity-25' id='replyList_{$comment['id']}'>";
+                                                    foreach ($comments_by_parent[$comment['id']] as $reply) {
+                                                        $replyLikes = $reply['likes'] ?? 0;
+
+                                                        $isReplyLiked = in_array($reply['id'], $userLikedComments);
+                                                        $rTextClass = $isReplyLiked ? 'text-primary' : 'text-muted';
+                                                        $rIconClass = $isReplyLiked ? 'bi-hand-thumbs-up-fill' : 'bi-hand-thumbs-up';
+
+                                                        echo "<div class='mb-2'>";
+                                                        echo "  <span class='fw-bold small text-dark'>" . htmlspecialchars($reply['student_name']) . "</span>";
+                                                        echo "  <p class='small text-muted mb-1'>" . htmlspecialchars($reply['comment_text']) . "</p>";
+                                                        echo "  <button class='btn btn-link p-0 {$rTextClass} small text-decoration-none' style='font-size: 0.75rem;' onclick='likeComment({$reply['id']}, this)'><i class='bi {$rIconClass}'></i> <span id='commentLike_{$reply['id']}'>{$replyLikes}</span></button>";
+                                                        echo "</div>";
+                                                    }
+                                                    echo "</div>";
+                                                } else {
+                                                    echo "<div class='ms-4 ps-3 border-start border-2 border-primary border-opacity-25' id='replyList_{$comment['id']}'></div>";
+                                                }
+                                                echo "</div>";
+                                            }
+                                        } else {
+                                            echo "<p class='text-muted small italic text-center py-2' id='noCommentMsg_{$post['id']}'>Be the first to start the conversation.</p>";
                                         }
                                         ?>
                                     </div>
@@ -143,28 +245,11 @@ $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             <div class="col-lg-4">
                 <div class="sidebar-sticky">
-                    <h6 class="fw-bold text-uppercase small letter-spacing-1 mb-4"><span class="alert-dot"></span>Active Bulletins</h6>
-                    <div class="urgent-scroll">
-                        <?php
-                        if (file_exists('data/announcements.xml')) {
-                            $xml = simplexml_load_file('data/announcements.xml');
-                            foreach ($xml->announcement as $item) {
-                                echo "
-                                <div class='mb-4 pb-3 border-bottom border-light'>
-                                    <div class='text-danger fw-bold small mb-1'>{$item->category}</div>
-                                    <h6 class='fw-bold mb-1'>{$item->title}</h6>
-                                    <p class='small text-muted mb-0'>{$item->description}</p>
-                                </div>";
-                            }
-                        }
-                        ?>
-                    </div>
-
-                    <div class="mt-5">
+                    <div class="mt-2">
                         <h6 class="fw-bold text-uppercase small letter-spacing-1 mb-3">Quick Links</h6>
                         <ul class="list-unstyled">
-                            <li class="mb-2"><a href="http://www.aclc.edu.ph/" class="text-decoration-none text-muted small hover-navy">Main ACLC Website</a></li>
-                            <li class="mb-2"><a href="http://www.amaesonline.com/index_pscs.php" class="text-decoration-none text-muted small hover-navy">Student Portal Login</a></li>
+                            <li class="mb-2"><a href="http://www.aclc.edu.ph/" class="text-decoration-none text-muted small hover-navy" target="_blank">Main ACLC Website</a></li>
+                            <li class="mb-2"><a href="http://www.amaesonline.com/index_pscs.php" class="text-decoration-none text-muted small hover-navy" target="_blank">Student Portal Login</a></li>
                         </ul>
                     </div>
                 </div>
