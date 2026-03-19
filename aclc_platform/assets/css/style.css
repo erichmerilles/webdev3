@@ -333,16 +333,16 @@ div.dataTables_wrapper div.dataTables_filter input:focus {
    17. NEWS TICKER (Urgent Bulletins)
 ========================================= */
 .ticker-container {
-    background-color: #dc3545;
+    background-color: #de3142;
     color: white;
-    display: flex;
+    display: flex;  
     align-items: center;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 128, 0.1);
 }
 
 .ticker-label {
-    background-color: #212529;
+    background-color: #124f8d;
     padding: 0.6rem 1.5rem;
     font-weight: 700;
     font-size: 0.85rem;

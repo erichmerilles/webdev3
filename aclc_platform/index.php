@@ -13,9 +13,6 @@ require_once 'config/db.php';
 $stmt = $pdo->query("SELECT * FROM posts WHERE created_at <= NOW() ORDER BY created_at DESC");
 $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// ==========================================
-// PERSISTENT LIKE TRACKING 
-// ==========================================
 $userId = $_SESSION['user_id'];
 
 // 1. Get all Post IDs this user has liked
@@ -54,10 +51,8 @@ $userLikedComments = $likedCommentsStmt->fetchAll(PDO::FETCH_COLUMN);
             </a>
 
             <div class="ms-auto d-flex align-items-center gap-3">
-                <span class="text-muted small d-none d-md-block">Welcome back, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong></span>
-                <?php if ($_SESSION['role'] === 'admin'): ?>
-                    <a href="admin.php" class="btn btn-sm btn-elegant border-0"><i class="bi bi-grid-1x2"></i></a>
-                <?php endif; ?>
+                <span class="text-muted small d-none d-md-block">Welcome back, <strong><?= htmlspecialchars(($_SESSION['role'] === 'student' && !empty($_SESSION['first_name']) && !empty($_SESSION['last_name'])) ? $_SESSION['first_name'] . ' ' . $_SESSION['last_name'] : $_SESSION['username']) ?></strong></span>
+                <?= $_SESSION['role'] === 'admin' ? '<a href="admin.php" class="btn btn-sm btn-elegant border-0"><i class="bi bi-grid-1x2"></i></a>' : '' ?>
                 <button onclick="confirmLogout(event)" class="btn btn-sm btn-dark rounded-pill px-4 fw-bold">Logout</button>
             </div>
         </div>

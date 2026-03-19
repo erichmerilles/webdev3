@@ -7,93 +7,11 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php");
     exit();
 }
+
 require_once 'config/db.php';
 
-// --- Handle Post Update ---
-if (isset($_POST['update_post'])) {
-    $pdo->prepare("UPDATE posts SET title=?, content=?, type=?, event_date=? WHERE id=?")->execute([
-        $_POST['title'],
-        $_POST['content'],
-        $_POST['type'],
-        !empty($_POST['event_date']) ? $_POST['event_date'] : null,
-        (int)$_POST['edit_id']
-    ]);
-    header("Location: admin.php?success=1");
-    exit();
-}
-
-// --- Handle XML Update ---
-if (isset($_POST['update_xml']) && file_exists($xml = 'data/announcements.xml')) {
-    $doc = new DOMDocument();
-    $doc->load($xml);
-    $xp = new DOMXPath($doc);
-    foreach ($xp->query("//announcement[id='{$_POST['edit_xml_id']}']") as $n) {
-        if ($c = $xp->query("category", $n)->item(0)) $c->nodeValue = htmlspecialchars($_POST['xml_category']);
-        if ($t = $xp->query("title", $n)->item(0)) $t->nodeValue = htmlspecialchars($_POST['xml_title']);
-        if ($d = $xp->query("description", $n)->item(0)) $d->nodeValue = htmlspecialchars($_POST['xml_description']);
-    }
-    $doc->save($xml);
-    header("Location: admin.php?xml_success=1");
-    exit();
-}
-
-// --- Handle Post Deletion ---
-if (isset($_GET['delete_id'])) {
-    $id = (int)$_GET['delete_id'];
-    $post = $pdo->prepare("SELECT image_path FROM posts WHERE id = ?");
-    $post->execute([$id]);
-    if (($p = $post->fetch()) && !empty($p['image_path']) && file_exists($p['image_path'])) unlink($p['image_path']);
-    $pdo->prepare("DELETE FROM posts WHERE id = ?")->execute([$id]);
-    header("Location: admin.php?deleted=1");
-    exit();
-}
-
-// --- Handle XML Deletion ---
-if (isset($_GET['delete_xml_id']) && file_exists($xml = 'data/announcements.xml')) {
-    $doc = new DOMDocument();
-    $doc->load($xml);
-    foreach ((new DOMXPath($doc))->query("//announcement[id='{$_GET['delete_xml_id']}']") as $n) $n->parentNode->removeChild($n);
-    $doc->save($xml);
-    header("Location: admin.php?xml_deleted=1");
-    exit();
-}
-
-// --- Handle Comment Deletion (NEW) ---
-if (isset($_GET['delete_comment_id'])) {
-    $id = (int)$_GET['delete_comment_id'];
-    // This smart query deletes the comment AND any child replies attached to it
-    $pdo->prepare("DELETE FROM comments WHERE id = ? OR parent_id = ?")->execute([$id, $id]);
-    header("Location: admin.php?deleted=1");
-    exit();
-}
-
-// --- Handle Post Creation ---
-if (isset($_POST['submit_post'])) {
-    $date = !empty($_POST['scheduled_date']) ? date('Y-m-d H:i:s', strtotime($_POST['scheduled_date'])) : date('Y-m-d H:i:s');
-    $img = null;
-    if (isset($_FILES['post_image']) && $_FILES['post_image']['error'] === 0) {
-        $path = 'assets/img/uploads/' . time() . '_' . basename($_FILES['post_image']['name']);
-        if (in_array(strtolower(pathinfo($path, PATHINFO_EXTENSION)), ['jpg', 'png', 'jpeg', 'gif', 'webp']) && move_uploaded_file($_FILES['post_image']['tmp_name'], $path)) $img = $path;
-    }
-    $pdo->prepare("INSERT INTO posts (title, content, type, image_path, created_at, event_date) VALUES (?, ?, ?, ?, ?, ?)")
-        ->execute([$_POST['title'], $_POST['content'], $_POST['type'], $img, $date, !empty($_POST['event_date']) ? $_POST['event_date'] : null]);
-    header("Location: admin.php?success=1");
-    exit();
-}
-
-// --- Handle XML Creation ---
-if (isset($_POST['submit_xml'])) {
-    $doc = new DOMDocument('1.0', 'UTF-8');
-    $doc->formatOutput = true;
-    $xml = 'data/announcements.xml';
-    file_exists($xml) ? $doc->load($xml) : $doc->appendChild($doc->createElement('campus_updates'));
-    $node = $doc->createElement('announcement');
-    $node->append($doc->createElement('id', time()), $doc->createElement('category', htmlspecialchars($_POST['xml_category'])), $doc->createElement('title', htmlspecialchars($_POST['xml_title'])), $doc->createElement('date', date('Y-m-d')), $doc->createElement('description', htmlspecialchars($_POST['xml_description'])));
-    $doc->documentElement->appendChild($node);
-    $doc->save($xml);
-    header("Location: admin.php?xml_success=1");
-    exit();
-}
+// Pulls in the backend logic file from the same root folder
+require_once 'admin_logic.php';
 
 // --- Analytics & Queries ---
 $totalPosts = $pdo->query("SELECT COUNT(*) FROM posts")->fetchColumn();
@@ -102,10 +20,10 @@ $newsCount = $pdo->query("SELECT COUNT(*) FROM posts WHERE type='news'")->fetchC
 $eventCount = $pdo->query("SELECT COUNT(*) FROM posts WHERE type='event'")->fetchColumn();
 $newsLikes = $pdo->query("SELECT COALESCE(SUM(likes), 0) FROM posts WHERE type='news'")->fetchColumn();
 $eventLikes = $pdo->query("SELECT COALESCE(SUM(likes), 0) FROM posts WHERE type='event'")->fetchColumn();
-$allPosts = $pdo->query("SELECT * FROM posts ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch all comments and link them to their original post titles
+$allPosts = $pdo->query("SELECT * FROM posts ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
 $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LEFT JOIN posts p ON c.post_id = p.id ORDER BY c.created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+$allStudents = $pdo->query("SELECT * FROM users WHERE role='student' ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -134,8 +52,8 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
             </a>
             <div class="d-flex align-items-center">
                 <span class="text-dark me-4 small fw-medium"><i class="bi bi-person-circle me-1 opacity-75"></i> <?= htmlspecialchars($_SESSION['username'] ?? 'Admin') ?></span>
-                <a href="index.php" class="btn btn-sm btn-outline-dark me-2 rounded-pill px-3" data-bs-toggle="tooltip" title="Return to Student Feed"><i class="bi bi-box-arrow-up-right me-1"></i>View Feed</a>
-                <button onclick="confirmLogout(event)" class="btn btn-sm btn-danger rounded-pill px-3" data-bs-toggle="tooltip" title="Sign out of Admin Panel"><i class="bi bi-power me-1"></i>Logout</button>
+                <a href="index.php" class="btn btn-sm btn-outline-dark me-2 rounded-pill px-3"><i class="bi bi-box-arrow-up-right me-1"></i>View Feed</a>
+                <button onclick="confirmLogout(event)" class="btn btn-sm btn-danger rounded-pill px-3"><i class="bi bi-power me-1"></i>Logout</button>
             </div>
         </div>
     </nav>
@@ -144,7 +62,7 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
         <div class="d-flex justify-content-between align-items-end mb-4">
             <div>
                 <h3 class="fw-bold mb-1 text-dark">Dashboard Overview</h3>
-                <p class="text-muted mb-0 small">Manage school publications, events, and urgent broadcasts.</p>
+                <p class="text-muted mb-0 small">Manage school publications, events, and user accounts.</p>
             </div>
         </div>
 
@@ -172,9 +90,9 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
             <div class="col-xl-3 col-md-6">
                 <div class="card kpi-card h-100">
                     <div class="card-body d-flex align-items-center p-4">
-                        <div class="kpi-icon bg-info bg-opacity-10 text-info me-3"><i class="bi bi-megaphone-fill"></i></div>
+                        <div class="kpi-icon bg-info bg-opacity-10 text-info me-3"><i class="bi bi-person-badge-fill"></i></div>
                         <div>
-                            <h3 class="fw-bold mb-0 text-dark"><?= $newsCount ?></h3><span class="text-muted small text-uppercase fw-bold" style="letter-spacing: 0.5px;">News Articles</span>
+                            <h3 class="fw-bold mb-0 text-dark"><?= count($allStudents) ?></h3><span class="text-muted small text-uppercase fw-bold" style="letter-spacing: 0.5px;">Students</span>
                         </div>
                     </div>
                 </div>
@@ -223,6 +141,67 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
             </div>
 
             <div class="col-lg-8">
+
+                <div class="card mb-4 border-info border-opacity-25">
+                    <div class="card-header pt-4 pb-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill text-info me-2"></i>Manage Student Accounts</h6>
+                        <button class="btn btn-sm btn-info text-white rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal"><i class="bi bi-plus-lg me-1"></i>Add Student</button>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="table-responsive">
+                            <table id="studentsTable" class="table table-hover table-custom align-middle mb-0 w-100 border-top">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Username (USN)</th>
+                                        <th>Status</th>
+                                        <th>Date Created</th>
+                                        <th class="pe-4 text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($allStudents)): ?>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-5 text-muted small">No student accounts found.</td>
+                                        </tr>
+                                    <?php endif; ?>
+                                    <?php foreach ($allStudents as $s): ?>
+                                        <tr>
+                                            <td class="ps-4 fw-bold text-dark"><i class="bi bi-person-circle text-secondary me-2"></i><?= htmlspecialchars($s['username']) ?></td>
+                                            <td>
+                                                <?php if (isset($s['status']) && $s['status'] === 'pending'): ?>
+                                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1">Pending</span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1 border border-success border-opacity-25">Approved</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="text-muted small fw-medium"><?= date('M d, Y', strtotime($s['created_at'])) ?></td>
+                                            <td class="pe-4 text-end text-nowrap">
+                                                <?php if (isset($s['status']) && $s['status'] === 'pending'): ?>
+                                                    <button onclick="window.location.href='admin.php?approve_user_id=<?= $s['id'] ?>'" class="btn btn-sm btn-light text-success border rounded-circle shadow-sm me-1" data-bs-toggle="tooltip" title="Approve Student" style="width:34px; height:34px; padding:0;"><i class="bi bi-check-lg"></i></button>
+                                                <?php endif; ?>
+                                                <button type="button" class="btn btn-sm btn-light text-primary border rounded-circle shadow-sm me-1"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editStudentModal"
+                                                    data-id="<?= $s['id'] ?>"
+                                                    data-username="<?= htmlspecialchars($s['username'], ENT_QUOTES) ?>"
+                                                    data-firstname="<?= htmlspecialchars($s['first_name'] ?? '', ENT_QUOTES) ?>"
+                                                    data-lastname="<?= htmlspecialchars($s['last_name'] ?? '', ENT_QUOTES) ?>"
+                                                    data-email="<?= htmlspecialchars($s['email'] ?? '', ENT_QUOTES) ?>"
+                                                    data-year="<?= htmlspecialchars($s['year_level'] ?? '', ENT_QUOTES) ?>"
+                                                    data-section="<?= htmlspecialchars($s['section'] ?? '', ENT_QUOTES) ?>"
+                                                    title="Edit User" style="width:34px; height:34px; padding:0;">
+                                                    <i class="bi bi-pencil-fill"></i>
+                                                </button>
+                                                <button onclick="confirmDelete('admin.php?delete_user_id=<?= $s['id'] ?>', 'Student Account')" class="btn btn-sm btn-light text-danger border rounded-circle shadow-sm" data-bs-toggle="tooltip" title="Delete User" style="width:34px; height:34px; padding:0;"><i class="bi bi-trash3-fill"></i></button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card mb-4 border-danger border-opacity-25">
                     <div class="card-header bg-danger text-white py-3 border-bottom-0" style="border-radius: 1rem 1rem 0 0 !important;">
                         <h6 class="fw-bold mb-0"><i class="bi bi-bell-fill me-2"></i>Manage Urgent Bulletins</h6>
@@ -326,15 +305,11 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (empty($allComments)): ?>
-                                        <tr>
+                                    <?php if (empty($allComments)): ?><tr>
                                             <td colspan="6" class="text-center py-5 text-muted">No comments to moderate.</td>
-                                        </tr>
-                                    <?php endif; ?>
-
+                                        </tr><?php endif; ?>
                                     <?php
                                     $badWords = ['stupid', 'idiot', 'hate', 'dumb', 'fake'];
-
                                     foreach ($allComments as $c):
                                         $isFlagged = false;
                                         $commentLower = strtolower($c['comment_text']);
@@ -347,23 +322,16 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
                                     ?>
                                         <tr class="<?= $isFlagged ? 'bg-danger bg-opacity-10' : '' ?>">
                                             <td class="ps-4">
-                                                <?php if ($isFlagged): ?>
-                                                    <span class="badge bg-danger rounded-pill shadow-sm px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Flagged</span>
-                                                <?php else: ?>
-                                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 border border-success border-opacity-25">Clean</span>
-                                                <?php endif; ?>
+                                                <?php if ($isFlagged): ?> <span class="badge bg-danger rounded-pill shadow-sm px-2 py-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Flagged</span>
+                                                <?php else: ?> <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1 border border-success border-opacity-25">Clean</span> <?php endif; ?>
                                             </td>
                                             <td class="fw-bold text-dark text-nowrap"><?= htmlspecialchars($c['student_name']) ?></td>
                                             <td>
-                                                <div class="text-truncate <?= $isFlagged ? 'fw-bold text-danger' : '' ?>" style="max-width: 200px;" title="<?= htmlspecialchars($c['comment_text']) ?>">
-                                                    <?= htmlspecialchars($c['comment_text']) ?>
-                                                </div>
+                                                <div class="text-truncate <?= $isFlagged ? 'fw-bold text-danger' : '' ?>" style="max-width: 200px;" title="<?= htmlspecialchars($c['comment_text']) ?>"><?= htmlspecialchars($c['comment_text']) ?></div>
                                             </td>
                                             <td class="text-muted small fst-italic"><span class="text-truncate d-inline-block" style="max-width: 150px; vertical-align: bottom;"><?= htmlspecialchars($c['post_title'] ?? 'Deleted Post') ?></span></td>
                                             <td class="text-muted small text-nowrap"><?= date('M d, Y', strtotime($c['created_at'])) ?></td>
-                                            <td class="pe-4 text-end">
-                                                <button onclick="confirmDelete('admin.php?delete_comment_id=<?= $c['id'] ?>', 'Comment')" class="btn btn-sm btn-light text-danger border rounded-circle shadow-sm" data-bs-toggle="tooltip" title="Delete Comment" style="width:34px; height:34px; padding:0;"><i class="bi bi-trash3-fill"></i></button>
-                                            </td>
+                                            <td class="pe-4 text-end"><button onclick="confirmDelete('admin.php?delete_comment_id=<?= $c['id'] ?>', 'Comment')" class="btn btn-sm btn-light text-danger border rounded-circle shadow-sm" data-bs-toggle="tooltip" title="Delete Comment" style="width:34px; height:34px; padding:0;"><i class="bi bi-trash3-fill"></i></button></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
@@ -376,47 +344,7 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
         </div>
     </div>
 
-    <div class="modal fade" id="editPostModal" tabindex="-1" aria-labelledby="editPostModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="editPostModalLabel">Edit Campus Post</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST">
-                    <div class="modal-body p-4">
-                        <input type="hidden" name="edit_id" id="editPostId">
-                        <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Title</label><input type="text" name="title" id="editPostTitle" class="form-control bg-light" required></div>
-                        <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Category</label><select name="type" id="editPostType" class="form-select bg-light">
-                                <option value="news">News Article</option>
-                                <option value="event">ACLC Event</option>
-                            </select></div>
-                        <div class="mb-3" id="editEventDateContainer" style="display: none;"><label class="form-label text-secondary fw-semibold small">Actual Event Date</label><input type="date" name="event_date" id="editEventDate" class="form-control bg-light"></div>
-                        <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Content</label><textarea name="content" id="editPostContent" class="form-control bg-light" rows="6" required></textarea></div>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0"><button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button><button type="submit" name="update_post" class="btn btn-primary rounded-pill px-4 fw-bold">Save Changes</button></div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="editBulletinModal" tabindex="-1" aria-labelledby="editBulletinModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="editBulletinModalLabel">Edit Urgent Bulletin</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form method="POST">
-                    <div class="modal-body p-4">
-                        <input type="hidden" name="edit_xml_id" id="editXmlId">
-                        <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Category</label><input type="text" name="xml_category" id="editXmlCategory" class="form-control bg-light" required></div>
-                        <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Title</label><input type="text" name="xml_title" id="editXmlTitle" class="form-control bg-light" required></div>
-                        <div class="mb-3"><label class="form-label text-secondary fw-semibold small">Description</label><input type="text" name="xml_description" id="editXmlDescription" class="form-control bg-light" required></div>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0"><button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button><button type="submit" name="update_xml" class="btn btn-danger rounded-pill px-4 fw-bold">Save Changes</button></div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <?php require_once 'admin_modals.php'; ?>
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -425,7 +353,22 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
     <script src="assets/js/main.js"></script>
 
     <script>
-        // DataTables Initialization for the new Comments Table
+        // Populate User Edit Modal
+        const editStudentModal = document.getElementById('editStudentModal');
+        if (editStudentModal) {
+            editStudentModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                document.getElementById('editUserId').value = button.getAttribute('data-id');
+                document.getElementById('editUsername').value = button.getAttribute('data-username');
+                document.getElementById('editFirstName').value = button.getAttribute('data-firstname');
+                document.getElementById('editLastName').value = button.getAttribute('data-lastname');
+                document.getElementById('editEmail').value = button.getAttribute('data-email');
+                document.getElementById('editYear').value = button.getAttribute('data-year');
+                document.getElementById('editSection').value = button.getAttribute('data-section');
+            });
+        }
+
+        // DataTables Initialization
         if (window.jQuery && $.fn.DataTable) {
             if ($('#commentsTable').length) {
                 $('#commentsTable').DataTable({
@@ -436,6 +379,18 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
                     "language": {
                         "search": "",
                         "searchPlaceholder": "Search comments..."
+                    }
+                });
+            }
+            if ($('#studentsTable').length) {
+                $('#studentsTable').DataTable({
+                    "pageLength": 5,
+                    "lengthChange": false,
+                    "ordering": false,
+                    "info": true,
+                    "language": {
+                        "search": "",
+                        "searchPlaceholder": "Search students..."
                     }
                 });
             }
@@ -473,6 +428,7 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
             });
         }
 
+        // --- SweetAlert Notifications ---
         <?php if (isset($_GET['success']) || isset($_GET['xml_success'])): ?>
             Swal.fire({
                 title: 'Success!',
@@ -501,6 +457,18 @@ $allComments = $pdo->query("SELECT c.*, p.title as post_title FROM comments c LE
                 timerProgressBar: true,
                 customClass: {
                     popup: 'rounded-4 shadow-lg border'
+                }
+            });
+        <?php endif; ?>
+
+        <?php if (isset($_GET['error']) && $_GET['error'] == 'duplicate'): ?>
+            Swal.fire({
+                title: 'Error!',
+                text: 'That username already exists. Please choose another.',
+                icon: 'error',
+                confirmButtonColor: '#0f172a',
+                customClass: {
+                    popup: 'rounded-4'
                 }
             });
         <?php endif; ?>

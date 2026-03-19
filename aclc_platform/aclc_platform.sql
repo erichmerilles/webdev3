@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 19, 2026 at 03:24 AM
+-- Generation Time: Mar 19, 2026 at 12:52 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -123,8 +123,14 @@ INSERT INTO `post_likes` (`user_id`, `post_id`) VALUES
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
+  `first_name` varchar(100) DEFAULT NULL,
+  `last_name` varchar(100) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `year_level` varchar(20) DEFAULT NULL,
+  `section` varchar(50) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `role` enum('admin','student') DEFAULT 'student',
+  `status` enum('pending','approved') NOT NULL DEFAULT 'pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -132,9 +138,11 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password_hash`, `role`, `created_at`) VALUES
-(1, 'admin', '$2y$10$j.GuqqPV7PKdO3wzzI58YuToMuLgmtCdMdqeYeVZ/F93VTCmfr6A2', 'admin', '2026-03-15 05:52:17'),
-(3, 'student01', '$2y$10$qiflDGVMAdNVFERENfRW.uUjt.jl1sGLbT1bEs6M1j3jRkQsCEAcG', 'student', '2026-03-15 06:10:48');
+INSERT INTO `users` (`id`, `username`, `first_name`, `last_name`, `email`, `year_level`, `section`, `password_hash`, `role`, `status`, `created_at`) VALUES
+(1, 'admin', NULL, NULL, NULL, NULL, NULL, '$2y$10$j.GuqqPV7PKdO3wzzI58YuToMuLgmtCdMdqeYeVZ/F93VTCmfr6A2', 'admin', 'approved', '2026-03-15 05:52:17'),
+(3, 'student01', NULL, NULL, NULL, NULL, NULL, '$2y$10$qiflDGVMAdNVFERENfRW.uUjt.jl1sGLbT1bEs6M1j3jRkQsCEAcG', 'student', 'approved', '2026-03-15 06:10:48'),
+(5, '19003281100', 'Erich', 'Merilles', 'erich@gmail.com', '4th Year', 'BSIS4-2A', '$2y$10$K4uQQBMBfDXPdwS3d.czreE/M0HBODV4RZhmR25Vldyfh4ZjAGXrK', 'student', 'approved', '2026-03-19 09:51:19'),
+(6, '22005611651', 'john', 'doe', 'asda@gmail.com', '3rd Year', 'BSEN4-2A', '$2y$10$GzsqMbJL7XV09tEi9WX6zOyRa65qDZMyNpHsvsWHLIFciG83dTRqW', 'student', 'approved', '2026-03-19 10:44:10');
 
 --
 -- Indexes for dumped tables
@@ -180,7 +188,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `posts`
@@ -192,7 +200,7 @@ ALTER TABLE `posts`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
